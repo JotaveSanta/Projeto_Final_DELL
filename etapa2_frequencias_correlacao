@@ -1,0 +1,34 @@
+import pandas as pd
+
+# 1. Distribuição de Frequência das Notas das Avaliações (reviews.jsonl)
+df_reviews = pd.read_json("Recebidos/dados/reviews.jsonl", lines=True)
+
+freq_abs = df_reviews['rating'].value_counts().sort_index()
+freq_rel = (freq_abs / len(df_reviews) * 100).round(2)
+freq_acum_rel = freq_rel.cumsum()
+
+tabela_frequencia = pd.DataFrame({
+    'Frequencia_Absoluta': freq_abs,
+    'Frequencia_Relativa_%': freq_rel,
+    'Frequencia_Acumulada_%': freq_acum_rel
+})
+
+print("=== 3. DISTRIBUIÇÃO DE FREQUÊNCIA DAS AVALIAÇÕES (1 a 5 estrelas) ===")
+print(tabela_frequencia)
+
+# Calculando a porcentagem de avaliações com 3 estrelas ou menos
+abaixo_ou_igual_3 = freq_rel.loc[1:3].sum()
+print(f"\n-> Porcentagem total de avaliações com 3 estrelas ou menos: {abaixo_ou_igual_3}%")
+print("-" * 60)
+
+# 2. Correlação entre Ocupação e Diária (daily_market.jsonl)
+df_daily = pd.read_json("Recebidos/dados/daily_market.jsonl", lines=True)
+
+correlacao_global = df_daily['occupancy'].corr(df_daily['adr'])
+print(f"\n=== 4. CORRELAÇÃO GLOBAL (Ocupação x ADR): {correlacao_global:.4f} ===")
+
+# Correlação separada por Tier
+print("\n=== Correlação Ocupação x ADR separada por Tier ===")
+for tier, grupo in df_daily.groupby('tier'):
+    corr_tier = grupo['occupancy'].corr(grupo['adr'])
+    print(f"   • Tier {tier}: {corr_tier:.4f}")

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Port Alder Hotel Revenue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{--teal:#2dd4bf;--sky:#38bdf8;--amber:#f59e0b;--coral:#fb4a5f;--text:#e6edf5;--muted:#8fa3b8}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--text);font-family:'DM Sans',system-ui,sans-serif;
+    background:linear-gradient(180deg,#060b12 0%,#0a1624 30%,#08111c 62%,#060b12 100%);background-attachment:fixed}
+  .serif{font-family:'Fraunces',Georgia,serif;font-weight:300;letter-spacing:-.02em}
+  .muted{color:var(--muted)}
+  :focus-visible{outline:2px solid var(--sky);outline-offset:3px}
+  .wrap{padding-left:max(1.5rem,6vw);padding-right:max(1.5rem,6vw)}
+  .hero-glow{background:radial-gradient(60% 55% at 72% 38%,rgba(56,189,248,.16),transparent 70%),radial-gradient(45% 45% at 18% 85%,rgba(45,212,191,.10),transparent 70%)}
+  .fade{opacity:0;transform:translateY(14px);animation:rise 1.4s cubic-bezier(.2,.7,.2,1) forwards}
+  .d1{animation-delay:.25s}.d2{animation-delay:.7s}.d3{animation-delay:1.2s}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .horizon{position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(56,189,248,.5),transparent)}
+  .kpi{border-left:1px solid rgba(143,163,184,.22);padding-left:1.5rem}
+  .num{font-variant-numeric:tabular-nums}
+  .note{display:inline-block;margin-top:1.25rem;font-size:.75rem;color:var(--amber);border:1px dashed rgba(245,158,11,.45);padding:.35rem .7rem;border-radius:6px}
+
+  #stage{height:380vh;position:relative}
+  #sticky{position:sticky;top:0;height:100vh;overflow:hidden}
+  #c{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y}
+  #c:active{cursor:grabbing}
+  .panel{position:absolute;left:max(1.5rem,6vw);bottom:8vh;max-width:25rem;padding:1.4rem 1.6rem;border-radius:14px;
+    background:linear-gradient(135deg,rgba(10,22,36,.78),rgba(10,22,36,.4));backdrop-filter:blur(10px);border:1px solid rgba(143,163,184,.18);transition:border-color .6s}
+  .panel[data-mode=good]{border-color:rgba(45,212,191,.45)}
+  .panel[data-mode=bad]{border-color:rgba(251,74,95,.5)}
+  #pt{transition:opacity .4s}
+  .legend i{display:inline-block;width:.6rem;height:.6rem;border-radius:2px;margin-right:.5rem}
+  .progress{position:absolute;right:max(1.5rem,4vw);top:50%;transform:translateY(-50%);width:2px;height:30vh;background:rgba(143,163,184,.2)}
+  .progress b{display:block;width:100%;height:0;background:linear-gradient(var(--teal),var(--coral))}
+
+  .tier{padding:0 0 0 1.5rem;border-left:2px solid var(--c)}
+  .meter{height:6px;border-radius:3px;background:rgba(143,163,184,.15);margin:.7rem 0 .35rem;overflow:hidden}
+  .meter b{display:block;height:100%;width:0;background:var(--c);border-radius:3px;transition:width 1.8s cubic-bezier(.2,.7,.2,1)}
+  #scatter text{fill:var(--muted);font-size:11px;font-family:'DM Sans',sans-serif}
+  .pt{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3);transition:opacity .6s,transform .6s cubic-bezier(.2,.9,.3,1.3)}
+  .pt.on{opacity:.9;transform:none}
+  .pt:hover{filter:brightness(1.4)}
+  .waffle{display:grid;grid-template-columns:repeat(10,1fr);gap:7px;max-width:23rem}
+  .dot{aspect-ratio:1;border-radius:50%;background:rgba(143,163,184,.14);transition:background .5s,box-shadow .5s}
+  .dot.bad{background:var(--coral);box-shadow:0 0 14px rgba(251,74,95,.45)}
+  .dot.ok{background:rgba(45,212,191,.75)}
+  .prob{border-left:2px solid var(--coral);padding:.2rem 0 .2rem 1.1rem}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.fade{animation:none;opacity:1;transform:none}.meter b,.pt{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="relative min-h-screen flex items-center hero-glow overflow-hidden">
+  <div class="relative z-10 wrap max-w-5xl">
+    <p class="fade d1 text-sm muted mb-6">Projeto de Ciência de Dados · Hotelaria</p>
+    <h1 class="fade d2 serif text-[clamp(3rem,9vw,7.5rem)] leading-[.98]">Port Alder<br>Hotel Revenue</h1>
+    <p class="fade d3 mt-8 max-w-xl text-lg font-light muted leading-relaxed">Onde a receita se concentra, onde a ocupação sustenta o negócio e onde a insatisfação dos hóspedes ameaça tudo isso.</p>
+  </div>
+  <div class="horizon"></div>
+</header>
+
+<section class="wrap py-32" aria-labelledby="kpi-t">
+  <h2 id="kpi-t" class="serif text-4xl md:text-5xl max-w-2xl leading-tight">A cidade em três números</h2>
+  <div class="mt-16 grid gap-12 md:grid-cols-3">
+    <div class="kpi"><div class="text-sm muted">Receita consolidada</div>
+      <div class="serif num mt-3 text-4xl md:text-[2.6rem] text-[color:var(--sky)]">R$ <span data-count="236002361.98" data-dec="2">0,00</span></div></div>
+    <div class="kpi"><div class="text-sm muted">Ocupação média</div>
+      <div class="serif num mt-3 text-4xl md:text-[2.6rem] text-[color:var(--teal)]"><span data-count="70.9" data-dec="1">0,0</span>%</div></div>
+    <div class="kpi"><div class="text-sm muted">Diária média (ADR)</div>
+      <div class="serif num mt-3 text-4xl md:text-[2.6rem]">R$ <span data-count="208.88" data-dec="2">0,00</span></div></div>
+  </div>
+</section>
+
+<section id="stage" aria-label="Modelo 3D interativo dos hotéis">
+  <div id="sticky">
+    <canvas id="c" aria-label="Modelo 3D de dois hotéis. Arraste ou role a página para girar."></canvas>
+    <div id="panel" class="panel" data-mode="good" role="status" aria-live="polite">
+      <div id="pt">
+        <h3 class="serif text-3xl" id="pname">Marisol Bay Resort</h3>
+        <p class="mt-3 muted font-light leading-relaxed" id="pdesc">Alta receita. Quartos ativos acesos em azul e verde: o prédio que mais sustenta o faturamento.</p>
+      </div>
+      <div class="legend mt-5 text-sm muted flex flex-wrap gap-x-6 gap-y-2">
+        <span><i style="background:var(--sky)"></i>Alta receita</span><span><i style="background:var(--teal)"></i>Quarto ativo</span>
+        <span><i style="background:var(--amber)"></i>Atenção</span><span><i style="background:var(--coral)"></i>Alta insatisfação</span>
+      </div>
+      <p class="mt-4 text-xs muted">Role para alternar entre os hotéis. Arraste para girar.</p>
+    </div>
+    <div class="progress" aria-hidden="true"><b id="bar"></b></div>
+  </div>
+</section>
+
+<section class="wrap py-32" aria-labelledby="tier-t">
+  <h2 id="tier-t" class="serif text-4xl md:text-5xl leading-tight max-w-2xl">Luxo e econômico jogam jogos diferentes</h2>
+  <p class="mt-6 max-w-xl muted font-light leading-relaxed">Comparação do faturamento, da ocupação e da diária entre as duas categorias de hotéis da cidade.</p>
+  
+  <div id="tiers" class="mt-14 grid gap-14 md:grid-cols-2"></div>
+  <p id="tier-sum" class="mt-14 serif text-2xl md:text-3xl max-w-3xl leading-snug"></p>
+</section>
+
+<section class="wrap py-32" aria-labelledby="adr-t">
+  <div class="grid gap-14 lg:grid-cols-[1.6fr_1fr] items-center">
+    <div>
+      <h2 id="adr-t" class="serif text-4xl md:text-5xl leading-tight max-w-xl">Preço e ocupação, hotel a hotel</h2>
+      <div class="mt-10"><svg id="scatter" viewBox="0 0 640 390" class="w-full h-auto" role="img" aria-label="Dispersão de diária média contra ocupação por hotel"></svg></div>
+      <div class="mt-2 flex flex-wrap gap-x-8 gap-y-2 text-sm muted" id="sc-leg"></div>
+    </div>
+    <div>
+      <div id="readout" class="serif text-2xl min-h-[4.5rem]">Passe o mouse sobre um ponto.</div>
+      <ul class="mt-8 space-y-5 muted font-light leading-relaxed" id="adr-ins"></ul>
+      
+    </div>
+  </div>
+</section>
+
+<section class="wrap py-32" aria-labelledby="sat-t">
+  <div class="grid gap-16 md:grid-cols-2 items-center">
+    <div>
+      <h2 id="sat-t" class="serif text-4xl md:text-5xl leading-tight max-w-lg">Mais da metade dos hóspedes não saiu satisfeita</h2>
+      <p class="mt-8 serif num text-[clamp(4rem,10vw,7rem)] text-[color:var(--coral)] leading-none"><span data-count="55.8" data-dec="1">0,0</span>%</p>
+      <p class="mt-6 max-w-md muted font-light leading-relaxed">das avaliações dos hóspedes na cidade têm 3 estrelas ou menos. No Northgate Inn, 39,14% das avaliações são ruins, mesmo com ocupação alta.</p>
+    </div>
+    <div>
+      <div id="waffle" class="waffle" role="img" aria-label="100 pontos: 55,8 em 100 avaliações têm 3 estrelas ou menos"></div>
+      <div class="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm muted">
+        <span><span class="inline-block w-2.5 h-2.5 rounded-full mr-2" style="background:var(--coral)"></span>3 estrelas ou menos (55,8%)</span>
+        <span><span class="inline-block w-2.5 h-2.5 rounded-full mr-2" style="background:var(--teal)"></span>4 e 5 estrelas (44,2%)</span>
+      </div>
+      <p class="mt-3 text-xs muted">Cada ponto equivale a 1% das avaliações.</p>
+    </div>
+  </div>
+  <h3 class="serif text-3xl mt-28">Onde o segmento econômico perde estrelas</h3>
+  <p class="mt-3 muted font-light max-w-xl">Hipóteses a validar com a análise de texto das avaliações.</p>
+  <div id="probs" class="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3"></div>
+</section>
+
+<footer class="wrap py-16 border-t border-[rgba(143,163,184,.15)] bg-gradient-to-b from-transparent to-[rgba(45,212,191,.04)]">
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+    <div><div class="serif text-2xl">Port Alder Hotel Revenue</div>
+      <p class="mt-3 max-w-md text-sm muted leading-relaxed">Projeto de caráter educacional. Os dados são usados exclusivamente para estudo e demonstração em Ciência de Dados.</p></div>
+    <a href="https://github.com/seu-usuario/port-alder-hotel-revenue" onclick="return false" class="inline-flex items-center gap-3 text-sm px-5 py-3 rounded-full border border-[rgba(143,163,184,.35)] hover:border-[color:var(--sky)] hover:text-[color:var(--sky)] transition-colors w-fit">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      Ver no GitHub</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  /* ===== DADOS =====
+     Total, ocupação, ADR, 55,8%, Marisol e Northgate vêm do projeto.
+     Tiers e pontos por hotel são ILUSTRATIVOS: substitua pelos valores reais. */
+  const DATA = {
+    total: 236002361.98,
+    tiers: [{"n": "Upscale", "c": "#38bdf8", "share": 0.3912, "occ": 73.0, "adr": 225.46}, {"n": "Boutique", "c": "#2dd4bf", "share": 0.0816, "occ": 75.8, "adr": 212.83}, {"n": "Luxury", "c": "#a78bfa", "share": 0.3126, "occ": 72.3, "adr": 370.35}, {"n": "Economy", "c": "#f59e0b", "share": 0.0422, "occ": 61.9, "adr": 91.99}, {"n": "Midscale", "c": "#38bdf8", "share": 0.1725, "occ": 68.3, "adr": 153.09}],
+    hotels: [{"n": "Alder & Quay Hotel", "t": 0, "occ": 73.8, "adr": 229.82}, {"n": "Cedar & Salt Hotel", "t": 4, "occ": 67.6, "adr": 145.66}, {"n": "Harborlight Suites", "t": 0, "occ": 74.9, "adr": 247.69}, {"n": "Kestrel Park Hotel", "t": 4, "occ": 68.7, "adr": 161.21}, {"n": "Marisol Bay Resort", "t": 2, "occ": 72.8, "adr": 389.02, "hi": "good"}, {"n": "Northgate Inn", "t": 3, "occ": 63.5, "adr": 96.99, "hi": "bad"}, {"n": "Paloma Court Hotel", "t": 4, "occ": 68.6, "adr": 152.39}, {"n": "Ridgeline Motor Inn", "t": 3, "occ": 60.4, "adr": 86.99}, {"n": "Seabright Grand", "t": 0, "occ": 72.8, "adr": 216.64}, {"n": "The Copper Meridian", "t": 2, "occ": 71.9, "adr": 351.69}, {"n": "The Foxglove", "t": 1, "occ": 74.8, "adr": 181.05}, {"n": "The Lantern House", "t": 1, "occ": 75.7, "adr": 260.61}, {"n": "The Wren Rooms", "t": 1, "occ": 76.9, "adr": 196.83}, {"n": "Willowmere Lodge", "t": 0, "occ": 70.7, "adr": 207.67}],
+    cityOcc: 70.9, cityAdr: 208.88,
+    probs: [
+      ['Limpeza e manutenção', 'Quartos desgastados e reparos adiados pesam nas notas de 1 a 3 estrelas.'],
+      ['Ruído e estrutura', 'Isolamento acústico fraco e instalações antigas são comuns em hotéis de entrada.'],
+      ['Atendimento', 'Equipes enxutas e rotatividade geram check-ins lentos e respostas inconsistentes.'],
+      ['Custo-benefício', 'A diária baixa atrai muita gente, mas qualquer falha vira frustração.'],
+      ['Ocupação sem reinvestimento', 'Com quartos sempre cheios, falta janela para manutenção entre estadias.'],
+      ['Expectativa x realidade', 'Fotos e descrições que prometem mais do que o hotel entrega.']
+    ]
+  };
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fmt = (v, d) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const $ = id => document.getElementById(id);
+
+  /* ===== Seção de tiers ===== */
+  $('tiers').innerHTML = DATA.tiers.map(t => `
+    <div class="tier" style="--c:${t.c}">
+      <h3 class="serif text-4xl">${t.n}</h3>
+      <div class="mt-8 text-sm muted">Faturamento</div>
+      <div class="serif num text-3xl">R$ <span data-count="${DATA.total * t.share}" data-dec="2">0,00</span></div>
+      <div class="meter"><b data-w="${t.share * 100}"></b></div><div class="text-xs muted">${fmt(t.share * 100, 0)}% da receita da cidade</div>
+      <div class="mt-8 text-sm muted">Ocupação</div>
+      <div class="serif num text-3xl"><span data-count="${t.occ}" data-dec="1">0,0</span>%</div>
+      <div class="meter"><b data-w="${t.occ}"></b></div>
+      <div class="mt-8 text-sm muted">Diária média (ADR)</div>
+      <div class="serif num text-3xl">R$ <span data-count="${t.adr}" data-dec="2">0,00</span></div>
+    </div>`).join('');
+  const L = {"n": "Luxury", "c": "#a78bfa", "share": 0.3126, "occ": 72.3, "adr": 370.35}, E = {"n": "Economy", "c": "#f59e0b", "share": 0.0422, "occ": 61.9, "adr": 91.99};
+  $('tier-sum').textContent = `A categoria ${L.n} cobra ${fmt(L.adr / E.adr, 1)} vezes a diária da ${E.n} e mantém ${fmt(L.occ, 1)}% de ocupação média.`;
+
+  /* ===== Dispersão ADR x Ocupação ===== */
+  const sx = o => 60 + (o - 50) / 40 * 560, sy = a => 340 - (a - 80) / 320 * 310;
+  let sv = '';
+  [50, 60, 70, 80, 90].forEach(o => sv += `<line x1="${sx(o)}" x2="${sx(o)}" y1="30" y2="340" stroke="rgba(143,163,184,.12)"/><text x="${sx(o)}" y="360" text-anchor="middle">${o}%</text>`);
+  [100, 200, 300, 400].forEach(a => sv += `<line x1="60" x2="620" y1="${sy(a)}" y2="${sy(a)}" stroke="rgba(143,163,184,.12)"/><text x="50" y="${sy(a) + 4}" text-anchor="end">R$ ${a}</text>`);
+  sv += `<line x1="${sx(DATA.cityOcc)}" x2="${sx(DATA.cityOcc)}" y1="30" y2="340" stroke="#e6edf5" stroke-dasharray="4 5" opacity=".4"/>
+         <line x1="60" x2="620" y1="${sy(DATA.cityAdr)}" y2="${sy(DATA.cityAdr)}" stroke="#e6edf5" stroke-dasharray="4 5" opacity=".4"/>
+         <text x="618" y="${sy(DATA.cityAdr) - 6}" text-anchor="end">ADR da cidade R$ ${fmt(DATA.cityAdr, 2)}</text>
+         <text x="${sx(DATA.cityOcc) + 6}" y="44">Ocupação da cidade ${fmt(DATA.cityOcc, 1)}%</text>`;
+  DATA.hotels.forEach((h, i) => {
+    const col = DATA.tiers[h.t].c, ring = h.hi === 'bad' ? '#fb4a5f' : h.hi === 'good' ? '#fff' : 'none';
+    sv += `<circle class="pt" data-i="${i}" style="transition-delay:${i * 90}ms" cx="${sx(h.occ)}" cy="${sy(h.adr)}" r="${h.hi ? 11 : 8}" fill="${col}" stroke="${ring}" stroke-width="2.5"/>`;
+    if (h.hi) sv += `<text x="${sx(h.occ) + 16}" y="${sy(h.adr) + 4}" style="fill:${ring === '#fff' ? '#e6edf5' : '#fb4a5f'}">${h.n}</text>`;
+  });
+  sv += `<text x="340" y="384" text-anchor="middle">Ocupação média</text><text x="14" y="190" transform="rotate(-90 14 190)" text-anchor="middle">Diária média (ADR)</text>`;
+  $('scatter').innerHTML = sv;
+  $('sc-leg').innerHTML = DATA.tiers.map(t => `<span><span class="inline-block w-2.5 h-2.5 rounded-full mr-2" style="background:${t.c}"></span>${t.n}</span>`).join('');
+  document.querySelectorAll('.pt').forEach(p => {
+    const show = () => { const h = DATA.hotels[p.dataset.i]; $('readout').innerHTML = `${h.n}<br><span class="text-base muted">Ocupação ${fmt(h.occ, 1)}% · ADR R$ ${fmt(h.adr, 2)}</span>`; };
+    p.addEventListener('mouseenter', show); p.addEventListener('click', show);
+  });
+  $('adr-ins').innerHTML = [
+    'Os pontos de luxo ficam no alto do gráfico: preço alto sustentado por ocupação acima da média da cidade.',
+    'O econômico se concentra abaixo da linha de ADR da cidade e disputa volume, não preço.',
+    'O Northgate Inn está à direita da média de ocupação com diária baixa: enche, mas não converte isso em boa avaliação.'
+  ].map(s => `<li class="border-l border-[rgba(143,163,184,.25)] pl-4">${s}</li>`).join('');
+
+  /* ===== Waffle e cards de problemas ===== */
+  const dots = [];
+  for (let i = 0; i < 100; i++) { const d = document.createElement('div'); d.className = 'dot'; $('waffle').appendChild(d); dots.push(d); }
+  $('probs').innerHTML = DATA.probs.map(p => `<div class="prob"><h4 class="serif text-2xl">${p[0]}</h4><p class="mt-2 muted font-light leading-relaxed">${p[1]}</p></div>`).join('');
+
+  /* ===== Reveal orquestrado ===== */
+  function runCounter(el) {
+    const target = parseFloat(el.dataset.count), dec = +el.dataset.dec;
+    if (reduce) { el.textContent = fmt(target, dec); return; }
+    const t0 = performance.now();
+    (function tick(now) {
+      const p = clamp((now - t0) / 2200, 0, 1);
+      el.textContent = fmt(target * (1 - Math.pow(1 - p, 4)), dec);
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+  const io = new IntersectionObserver(es => es.forEach(en => {
+    if (!en.isIntersecting) return;
+    const el = en.target; io.unobserve(el);
+    if (el.dataset.count) runCounter(el);
+    if (el.dataset.w) el.style.width = el.dataset.w + '%';
+    if (el.id === 'scatter') el.querySelectorAll('.pt').forEach(p => p.classList.add('on'));
+    if (el.id === 'waffle') dots.forEach((d, i) => { const go = () => { d.classList.add(i < 56 ? 'bad' : 'ok'); if (i === 55) d.style.opacity = '.8'; }; reduce ? go() : setTimeout(go, i * 18); });
+  }), { threshold: 0.35 });
+  document.querySelectorAll('[data-count],[data-w],#scatter,#waffle').forEach(el => io.observe(el));
+
+  /* ===== Three.js ===== */
+  if (typeof THREE === 'undefined') return;
+  const canvas = $('c'), stage = $('stage');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x060b12, 0.012);
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 120);
+  scene.add(new THREE.HemisphereLight(0xcfe3ff, 0x1a2a3d, 1.15));
+  const sun = new THREE.DirectionalLight(0xfff1dc, 1.25); sun.position.set(8, 16, 12); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x8ab4ff, 0.4); fill.position.set(-10, 6, -8); scene.add(fill);
+
+  const OFF = 0x1c3148, FRAME = 0x14233a, FH = 0.9, PH = 1.1;
+  const hotels = [], dummy = new THREE.Object3D(), tmp = new THREE.Color();
+  const std = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, metalness: 0.05, flatShading: true });
+  const basic = (c, op) => new THREE.MeshBasicMaterial(op ? { color: c, transparent: true, opacity: op } : { color: c });
+
+  function signTex(txt, col) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+    const x = c.getContext('2d');
+    x.fillStyle = '#0b1826'; x.fillRect(0, 0, 512, 96);
+    x.fillStyle = col; x.font = '500 44px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(txt, 256, 50);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function makeHotel(x, floors, W, D, o) {
+    const g = new THREE.Group(), th = floors * FH, PW = W + 1.8, PD = D + 1.3, top = PH + th;
+    const add = (geo, mat, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); g.add(m); return m; };
+    const wall = std(o.wall), trim = std(o.trim), light = std(0xf7f1e6);
+
+    // calçada, base e torre sólidas
+    add(new THREE.BoxGeometry(PW + 3, 0.08, PD + 4.2), std(0x2a3f56), 0, 0.04, 0.9);
+    add(new THREE.BoxGeometry(PW, PH, PD), trim, 0, PH / 2, 0);
+    add(new THREE.BoxGeometry(PW + 0.2, 0.12, PD + 0.2), light, 0, PH, 0);
+    add(new THREE.BoxGeometry(W, th, D), wall, 0, PH + th / 2, 0);
+
+    // frisos por andar e pilastras
+    for (let f = 1; f < floors; f++) add(new THREE.BoxGeometry(W + 0.1, 0.05, D + 0.1), trim, 0, PH + f * FH, 0);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => add(new THREE.BoxGeometry(0.17, th + 0.02, 0.17), light, a * W / 2, PH + th / 2, b * D / 2));
+    for (let i = 1; i < 6; i++) { const u = i / 6 * W - W / 2;
+      add(new THREE.BoxGeometry(0.06, th, 0.05), trim, u, PH + th / 2, D / 2 + 0.02);
+      add(new THREE.BoxGeometry(0.06, th, 0.05), trim, u, PH + th / 2, -D / 2 - 0.02); }
+
+    // coroamento, casa de máquinas e letreiro
+    add(new THREE.BoxGeometry(W + 0.3, 0.16, D + 0.3), light, 0, top + 0.08, 0);
+    add(new THREE.BoxGeometry(W * 0.35, 0.35, D * 0.4), trim, 0, top + 0.33, -D * 0.15);
+    add(new THREE.BoxGeometry(W, 0.6, 0.12), std(0x0b1826), 0, top + 0.5, D / 2 - 0.15);
+    add(new THREE.PlaneGeometry(W, W * 96 / 512), new THREE.MeshBasicMaterial({ map: signTex(o.name, o.signCol) }), 0, top + 0.5, D / 2 - 0.085).scale.y = 0.95;
+    add(new THREE.BoxGeometry(W + 0.06, 0.05, 0.14), basic(o.led[0]), 0, top + 0.2, D / 2 - 0.15);
+
+    // entrada: degraus, portas de vidro e janelas da base
+    const fz = PD / 2;
+    add(new THREE.BoxGeometry(2.6, 0.1, 0.45), light, 0, 0.1, fz + 0.2);
+    add(new THREE.BoxGeometry(1.6, 0.82, 0.07), std(0x14233a), 0, 0.5, fz + 0.01);
+    [-0.38, 0.38].forEach(dx => add(new THREE.PlaneGeometry(0.68, 0.74), basic(o.led[0], 0.9), dx, 0.5, fz + 0.05));
+    [-0.76, 0, 0.76].forEach(dx => add(new THREE.BoxGeometry(0.04, 0.8, 0.04), light, dx, 0.5, fz + 0.06));
+    add(new THREE.BoxGeometry(1.6, 0.03, 0.04), light, 0, 0.62, fz + 0.06);
+    [-1.9, -1.45, 1.45, 1.9].forEach(wx => {
+      add(new THREE.BoxGeometry(0.38, 0.52, 0.05), std(0x14233a), wx, 0.58, fz + 0.01);
+      add(new THREE.PlaneGeometry(0.32, 0.46), basic(o.led[1], 0.75), wx, 0.58, fz + 0.045);
+    });
+
+    // marquise bem definida
+    const cz = fz + 0.6;
+    add(new THREE.BoxGeometry(3.0, 0.14, 1.2), std(o.canopy), 0, 1.0, cz);
+    add(new THREE.BoxGeometry(3.04, 0.2, 0.07), light, 0, 0.98, fz + 1.2);
+    add(new THREE.BoxGeometry(2.8, 0.04, 0.04), basic(o.led[0]), 0, 0.86, fz + 1.16);
+    const under = add(new THREE.PlaneGeometry(2.8, 1.05), basic(o.led[0], 0.45), 0, 0.92, cz); under.rotation.x = Math.PI / 2;
+    [-1.3, 1.3].forEach(cx => add(new THREE.CylinderGeometry(0.06, 0.06, 0.93, 10), light, cx, 0.47, fz + 1.1));
+    const pl = new THREE.PointLight(o.led[0], 1.8, 9); pl.position.set(0, 1.5, fz + 1.4); g.add(pl);
+
+    // janelas: moldura escura + vidro LED, em grade alinhada
+    const cf = 6, cs = 4, n = floors * (2 * cf + 2 * cs);
+    const frames = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.42, 0.56), basic(0xffffff), n);
+    const panes = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.34, 0.46), basic(0xffffff), n);
+    const faces = [
+      { c: cf, span: W, nx: 0, nz: 1, tx: 1, tz: 0, ry: 0, d: D / 2 },
+      { c: cf, span: W, nx: 0, nz: -1, tx: -1, tz: 0, ry: Math.PI, d: D / 2 },
+      { c: cs, span: D, nx: 1, nz: 0, tx: 0, tz: -1, ry: Math.PI / 2, d: W / 2 },
+      { c: cs, span: D, nx: -1, nz: 0, tx: 0, tz: 1, ry: -Math.PI / 2, d: W / 2 }
+    ];
+    const fl = []; let k = 0;
+    for (let f = 0; f < floors; f++) faces.forEach(fc => {
+      for (let i = 0; i < fc.c; i++, k++) {
+        const u = (i + 0.5) / fc.c * fc.span - fc.span / 2, y = PH + (f + 0.5) * FH;
+        [[frames, 0.008], [panes, 0.02]].forEach(([im, off]) => {
+          dummy.position.set(fc.nx * (fc.d + off) + fc.tx * u, y, fc.nz * (fc.d + off) + fc.tz * u);
+          dummy.rotation.y = fc.ry; dummy.updateMatrix(); im.setMatrixAt(k, dummy.matrix);
+        });
+        const on = Math.random() < o.lit;
+        const base = new THREE.Color(on ? o.led[Math.floor(Math.random() * o.led.length)] : OFF);
+        frames.setColorAt(k, tmp.set(FRAME)); panes.setColorAt(k, base);
+        if (on && o.blink && Math.random() < 0.55) fl.push({ i: k, base, ph: Math.random() * 6, sp: 1.2 + Math.random() * 2.8 });
+      }
+    });
+    g.add(frames); g.add(panes); g.position.x = x; scene.add(g);
+    const h = { g, panes, fl }; hotels.push(h); return h;
+  }
+
+  const marisol = makeHotel(-4.6, 11, 3, 2.1, {
+    name: 'MARISOL BAY', signCol: '#5eead4', wall: 0xf2e8d5, trim: 0xdccdb2, canopy: 0x2bb5c7, lit: 0.92, blink: false,
+    led: [0x22d3ee, 0x34d399, 0x38bdf8, 0x4ade80]
+  });
+  const northgate = makeHotel(4.6, 6, 3, 2.1, {
+    name: 'NORTHGATE INN', signCol: '#ffb020', wall: 0xebcdb9, trim: 0xcaa18d, canopy: 0xc2573f, lit: 0.82, blink: true,
+    led: [0xffb020, 0xff3b4e, 0xff8a1f, 0xff3b4e]
+  });
+
+  // quarteirões sólidos ao fundo, grade e partículas
+  const bgMat = std(0x1d3248);
+  [[-9.5, -6, 4], [-1, -8, 7], [9, -7, 3], [12.5, -2, 5], [-12.5, 1, 3]].forEach(([x, z, h]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1.8, h, 1.8), bgMat); m.position.set(x, h / 2, z); scene.add(m);
+  });
+  const grid = new THREE.GridHelper(48, 48, 0x1f3550, 0x12202f); grid.material.transparent = true; grid.material.opacity = 0.45; scene.add(grid);
+  const pg = new THREE.BufferGeometry(), pts = new Float32Array(900);
+  for (let i = 0; i < 300; i++) { pts[i * 3] = (Math.random() - 0.5) * 34; pts[i * 3 + 1] = Math.random() * 16; pts[i * 3 + 2] = (Math.random() - 0.5) * 22 - 4; }
+  pg.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+  scene.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: 0x7dd3fc, size: 0.05, transparent: true, opacity: 0.5 })));
+
+  // interação
+  let px = 0, py = 0, drag = false, lastX = 0, dr = 0, drT = 0;
+  canvas.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect(); px = (e.clientX - r.left) / r.width - 0.5; py = (e.clientY - r.top) / r.height - 0.5;
+    if (drag) { drT += (e.clientX - lastX) * 0.008; lastX = e.clientX; }
+  });
+  canvas.addEventListener('pointerdown', e => { drag = true; lastX = e.clientX; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointerup', () => drag = false);
+  function resize() { const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  addEventListener('resize', resize); resize();
+
+  const TEXT = {
+    good: ['Marisol Bay Resort', 'Alta receita. Quartos ativos acesos em azul e verde: o prédio que mais sustenta o faturamento.'],
+    bad: ['Northgate Inn', 'Alta insatisfação. 39,14% das avaliações são ruins, e as janelas em âmbar e vermelho piscam como alerta.']
+  };
+  let mode = 'good', progress = 0, sm = 0;
+  function setMode(m) {
+    if (m === mode) return; mode = m; $('pt').style.opacity = 0;
+    setTimeout(() => { $('pname').textContent = TEXT[m][0]; $('pdesc').textContent = TEXT[m][1]; $('panel').dataset.mode = m; $('pt').style.opacity = 1; }, 300);
+  }
+  const readScroll = () => { const r = stage.getBoundingClientRect(); progress = clamp(-r.top / (r.height - innerHeight), 0, 1); };
+  addEventListener('scroll', readScroll, { passive: true }); readScroll();
+
+  const clock = new THREE.Clock();
+  (function frame() {
+    requestAnimationFrame(frame);
+    const t = clock.getElapsedTime();
+    sm = lerp(sm, progress, 0.08); dr = lerp(dr, drT, 0.1);
+    const f = smooth(0.38, 0.62, sm), cx = lerp(-4.6, 4.6, f), lh = lerp(5.4, 3.2, f), rad = lerp(21, 14.5, f);
+    camera.position.set(cx + px * 1.6, lh + 1.6 - py * 1.2, rad); camera.lookAt(cx, lh, 0);
+    const spin = sm * Math.PI * 2 + dr + (reduce ? 0 : Math.sin(t * 0.3) * 0.08);
+    marisol.g.rotation.y = spin; northgate.g.rotation.y = -spin;
+    if (!reduce && northgate.fl.length) {
+      northgate.fl.forEach(w => { tmp.copy(w.base).multiplyScalar(0.08 + 0.92 * Math.abs(Math.sin(t * w.sp + w.ph))); northgate.panes.setColorAt(w.i, tmp); });
+      northgate.panes.instanceColor.needsUpdate = true;
+    }
+    $('bar').style.height = sm * 100 + '%';
+    setMode(sm > 0.5 ? 'bad' : 'good');
+    renderer.render(scene, camera);
+  })();
+})();
+</script>
+</body>
+</html>
